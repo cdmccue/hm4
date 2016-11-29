@@ -1,0 +1,11 @@
+program p var nat n1; set s1,s2; s3  
+begin end , should fail at s3
+
+
+
+
+
+
+
+
+

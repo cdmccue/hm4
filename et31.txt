@@ -1,0 +1,16 @@
+program p 
+
+var
+
+ nat n1,n2;
+ set s1,s2;
+
+begin 
+n1 := n2;
+s1 := - - CMP{ 0, }
+end
+{}
+.
+
+should fail at }; lookahead is NATCONST
+

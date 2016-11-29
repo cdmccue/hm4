@@ -1,0 +1,10 @@
+program p var nat n1; set s1,  begin end , should fail at begin
+
+
+
+
+
+
+
+
+

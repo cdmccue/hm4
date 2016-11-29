@@ -1,0 +1,16 @@
+program p 
+
+var
+
+ nat n1,n2;
+ set s1,s2;
+
+begin 
+n1 := n2;
+s1 := - - CMP (
+end
+{}
+.
+
+should fail at (; need a brace after CMP
+

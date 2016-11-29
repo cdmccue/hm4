@@ -1,0 +1,419 @@
+COS 360   Homework Exercise #4
+
+Terminals, Grammar Rules, and Error Messages
+
+This brings together in a more compressed format the terminals for the
+language, the grammar rules with lookahead sets, and the specification 
+of the error messages that the translator should generate.
+
+I. Terminals
+
+PROGRAM  "program"  a reserved word, the first word of any 
+                    valid program
+ID   [a-zA-Z][a-zA-Z0-9]*   except for reserved words;
+                    identifiers must be declared to be either
+                    a set type or a natural number type, and
+                    when you see the declarations you will record
+                    the declared type in a symbol table that the
+                    translator uses for type checking
+VAR      "var"      a reserved word
+BEGIN    "begin"    a reserved word
+END      "end"      a reserved word
+IF       "if"       a reserved word
+ELSE     "else"     a reserved word
+ENDIF    "endif"    a reserved word
+NAT      "nat"      a reserved word
+SET      "set"      a reserved word
+NATCONST 0|[1-9][0-9]*  a string for a nonnegative literal
+                        with no extraneous leading 0's
+LEFTBRACE '{'
+RIGHTBRACE '}'
+LEFTPAREN '('
+RIGHTPAREN ')'
+SEMICOLON ';'
+PERIOD  '.'
+COMMA ','
+ASSIGN ":="  for assignment
+SUBSET "<="  for is subset of; a comparison operator for sets
+EQUALS '='   for equality comparisons of sets
+NOT "not" for boolean negation; so "not" is reserved
+INTERSECTION '*'   for set intersection, a binary set
+                   operator
+UNION '+'   for set union, a binary set operator
+SETDIFFERENCE '\'   for set difference, a binary set operator
+COMPLEMENT '-'   for unary set complement
+IS_IN  "in"  for set membership; so "in" is reserved
+THEN    "then"    a reserved word
+CMP    "CMP"      a reserved word for the cofinite literals
+UNRECOGNIZED  for anything else, so the lexical analyzer can
+              signal the parser that it encountered something 
+              invalid
+EOF a special token that the lexical analyzer sends when it has 
+    encountered the end of file
+
+See Token.java for more discussion.
+
+
+
+II. Grammar Rules with Lookahead Sets
+
+"" is used in the rules for the empty string.  I put comments below the 
+rule indicating the lookaheads.  If there is more than one rhs, the 
+lookahead sets for each are separated by semicolons.  In some cases
+I just put "same" if the lookahead set for the second alternative is
+the same as for the first. In some cases there is a lengthier 
+explication of some feature.
+
+<program> ::= PROGRAM ID VAR <dec> BEGIN <st list> END <out>;
+
+// PROGRAM
+
+<dec> ::= <nat dec> <set dec>;
+
+// NAT, SET, BEGIN
+
+<nat dec> ::= "" | NAT <ne var list> SEMICOLON ;
+
+// SET,BEGIN; NAT
+
+<set dec> ::=  "" | SET <ne var list> SEMICOLON ;
+
+// BEGIN; SET
+
+<ne var list> ::= ID | ID COMMA <ne var list>;
+
+// ID; same
+// You can use Arden's lemma and a regular expression
+// identity here to reduce to a single rhs
+// ID (COMMA ID)*
+
+<st list> ::= "" | <ne st list>;
+
+// ELSE,ENDIF,END; ID,IF
+/***
+
+Note, depending on the context of the <st list>,  the first rhs
+would need a different lookahead, but for simplicity, you do not
+need to vary the lookahead set for <st list>.  A program like
+
+program p
+var
+begin
+<=
+
+will lead to an error message
+
+[line 4]: identifier, "end", "if", "else" or "endif" expected.
+
+but the program
+
+program p
+var
+begin
+else
+
+will lead to an error message
+
+[line 4]: "end" expected.
+
+so the else token would not really be acceptable.
+
+I don't want you to bother to distinguish those contexts.
+If you just declare TreeSet<Integer> variables for the grammar 
+variables that have more than one lookahead token, you can write
+methods to create the appropriate string of token labels for the
+tokens in the set.
+
+***/
+
+<ne st list> ::=  <st> |  <st>  SEMICOLON <ne st list>;
+
+// ID,IF; ID,IF
+// Again, Arden's lemma and a regular expression identity
+// can reduce this to a single rhs, <st> (SEMICOLON <st>)*
+
+
+<st> ::= <asgn> | <if> ;
+
+// ID; IF
+
+<asgn> ::= <set asgn> | <nat asgn>; 
+
+// ID; ID
+/***
+
+You need to look up the identifier to determine which rhs to call,
+and that lookup could also generate the error
+
+[line n] identifier ID.getTokenString() is not declared.
+
+
+***/
+
+<set asgn> ::= ID ASSIGN <set exp>
+
+// ID
+
+<set exp> ::= <set exp> SETDIFFERENCE <set level 2> | <set level 2>;
+
+// ID, LEFTBRACE, LEFTPAREN, COMPLEMENT, CMP; same
+// Arden again
+
+<set level 2> ::= <set level 2> UNION <set level 1> | <set level 1>;
+
+// ID, LEFTBRACE, LEFTPAREN, COMPLEMENT, CMP; same
+// Arden again
+
+<set level 1> ::= <set level 1> INTERSECTION <set level 0> | <set level 0>;
+
+// ID, LEFTBRACE, LEFTPAREN, COMPLEMENT, CMP; same
+// Arden again
+
+<set level 0> = COMPLEMENT <set level 0> | <set atomic>
+
+// COMPLEMENT; ID, LEFTBRACE, LEFTPAREN, CMP
+// you can use Arden here, too, though the lookahead sets are disjoint;
+// it allows you to avoid the recursive call to count the occurrences
+// of COMPLEMENT
+
+<set atomic> ::= ID | <set const> | LEFTPAREN <set exp> RIGHTPAREN;
+
+// ID; LEFTBRACE, CMP; LEFTPAREN
+
+<set const> ::= <complemented> | <set literal>;
+
+// CMP; LEFTBRACE
+
+<complemented> ::= CMP <set literal>;
+
+// CMP
+
+<set literal> ::= LEFTBRACE <nat list> RIGHTBRACE;
+
+// LEFTBRACE
+
+<nat list> ::=  "" | <ne nat list>;
+
+// RIGHTBRACE; NATCONST
+
+<ne nat list> ::=  NATCONST | NATCONST COMMA <ne nat list>;
+
+// NATCONST; NATCONST
+// use Arden and the regular expression identity (ab)*a = a(ba)*
+
+<nat asgn> ::= ID ASSIGN <nat exp>;
+
+// ID
+
+<nat exp> ::= ID | NATCONST;  // no arithmetic operators
+
+// ID; NATCONST
+
+<test>  ::=   NOT <test> | <test atomic>;
+
+// NOT; ID, LEFTBRACE, LEFTPAREN, COMPLEMENT, CMP, NATCONST
+
+<test atomic> ::= <set exp> <set test suffix> | <nat exp> IS_IN <set exp> ;
+
+// ID, LEFTBRACE, LEFTPAREN, COMPLEMENT, CMP; ID, NATCONST
+/***
+
+The overlap is ID, so you would need to look it up to see which rhs to use,
+and the error message
+
+[line n] identifier ID.getTokenstring() is not declared.
+
+is again a possibility.
+
+***/
+
+<set test suffix> ::= EQUALS <set exp> | SUBSET <set exp> 
+
+// EQUALS; SUBSET
+
+<if> ::= <if prefix> <if suffix>;
+
+// IF
+
+<if prefix> ::= IF <test> THEN <st list>;
+
+// IF
+
+<if suffix> ::= ENDIF | ELSE <st list> ENDIF;
+
+// ENDIF; ELSE
+
+<out> ::= <set exp> PERIOD;
+
+// ID, LEFTBRACE, LEFTPAREN, COMPLEMENT, CMP
+
+
+
+III. Error Messages
+
+
+There are three general types of error messages.  All should be handled
+by throwing an exception with a message
+
+[line ln]: message
+
+with ln the line number of the token that revealed the error, whether it
+had been consumed or is still the lookahead.
+
+The three types are distinguished by the events that lead to their discovery
+
+1. the need to call a grammar variable's method
+2. the need to match the current lookahead with a specific token(terminal)
+3. the need to install or look up an identifier in the symbol table
+
+We discuss each in more detail.
+
+1. the lookahead token is not appropriate for the next grammar variable's
+rhs's.  Suppose the variable is V, and if you union up the lookahead sets
+of the rhs's of V into a set S of token types (PROGRAM, ID, etc.).  The
+test is
+
+if (lookahead is in S)
+   then okay to proceed with the call to V()
+else
+   throw the exception with message
+
+   [line ln]:  setString expect.
+
+where ln is the lookahead's line number and setString is constructed from
+the token labels of the tokens in S, in their natural order as given by
+the compareTo method in Token.  The message format varies with the size 
+of the set S, for example, a singleton
+
+"program" expected.
+
+for <program>
+
+"else" or "endif" expected.
+
+is the doubleton for <if suffix>
+
+"begin", "nat" or "set" expected.
+
+for sizes > 2.  This one for <dec>. <set exp> has a set with a larger number.
+
+You should be able to test for membership either before the call to the 
+grammar variable's method, or first thing inside it, but you will need to
+have access to the token or the line number if it has been consumed.  Either
+technique should work the same way.  The static array TOKEN_LABELS in Token 
+should be used to get the string to produce after the line number prefix.
+
+2. the lookahead token does not match a specific token that is required.  The
+message should be like what a singleton set produces
+
+[line ln]: tokenLabelOftheSpecificToken expected.
+
+For example, the rule
+
+<if prefix> ::= IF <test> THEN <st list>;
+
+requires that THEN follow the <test>.  Assuming you already have tested that
+the lookahead is IF,
+
+   consume();
+   test();  // you would need to do some other things here; I am
+            // just illustrating this type of error
+   if (lookahead's type is THEN){
+      consume();
+      stlist();
+   }
+   else{
+      // generate the  exception with error message
+      [line ln]: "then" expected.
+
+
+3. the token is an identifier, but there is something wrong, one of the
+conditions of the following list, given with just the part of the error
+message that is after the "[line ln}: " prefix.  s stands for the 
+tokenString of the ID that led to the problem.  I did not put quotes 
+around the tokenString in mine, so for example
+
+program p
+   var
+      nat cat, cat;
+begin
+end
+{}
+.
+
+would generate an error message
+
+[line 3] cat is a duplicate nat variable declaration.
+
+Each is given with an example of the error condition that would generate
+it.
+
+a. a duplicate nat variable declaration, e.g.,
+
+   nat i,j,i;
+
+s is a duplicate nat variable declaration.
+
+b. a set variable declaration duplicates a nat variable declaration
+
+   nat i,j,i;
+   set j;
+
+identifier s is previously declared as nat.
+
+c. a duplicate set variable declaration
+
+   set t,t;
+
+s is a duplicate set variable declaration.
+
+d. an identifier is not declared
+
+   program p
+   var
+   begin
+      t := {}
+   end
+   {}
+   .
+
+identifier s is not declared.
+
+e. a nat variable is used in a context that requires a set expression,
+   for example,
+
+   nat i;
+   set t;
+
+   begin
+      t := i;
+      if t <= i then
+      endif;
+      if i in i then
+      endif;
+      if t = i then
+      endif
+
+
+identifier s is declared as nat.
+
+f. a set variable is used where a nat expression is called for, e.g.,
+
+   nat i;
+   set t;
+   begin
+      i := t;
+
+
+identifier s is declared as set.
+
+Generally, you should add the "[line ln]: " text to the beginning of
+those messages, and use for ln the getLineNumber() result from the token
+that revealed the error, whether it has been consumed or is still the
+lookahead token. 
+
+If an exception is thrown, that ends the parse, though it may be useful 
+during development to catch the exception and show what the next token
+would be.
+
+

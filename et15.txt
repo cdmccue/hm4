@@ -1,0 +1,23 @@
+program p 
+
+var
+
+ nat n1;
+ set s1,s2;
+
+begin 
+n1 =
+
+should fail at =
+
+
+
+
+
+
+
+
+
+
+
+

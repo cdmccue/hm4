@@ -1,0 +1,13 @@
+program p2
+
+var
+
+nat i,j,k;
+
+set s;
+
+begin
+   s := CMP{}
+end
+s
+.

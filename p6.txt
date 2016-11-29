@@ -1,0 +1,13 @@
+program p6
+
+var
+
+nat i,j,k;
+
+set s;
+
+begin
+   s := -CMP{}
+end
+s
+.

@@ -1,0 +1,17 @@
+program p var nat n1; set s1  begin end , should fail at begin
+
+
+the error message might be 
+";" expected 
+
+"," or ";" expected
+
+depending on how you coded it.
+
+
+
+
+
+
+
+

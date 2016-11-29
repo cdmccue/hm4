@@ -1,0 +1,1 @@
+program p var begin ; should fail at ;

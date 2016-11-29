@@ -1,0 +1,27 @@
+program p 
+
+var
+
+ nat n1;
+ set s1,s2;
+
+begin 
+{
+the only legitimate tokens after begin are
+
+ID
+IF
+END
+
+so should fail at {
+
+
+
+
+
+
+
+
+
+
+

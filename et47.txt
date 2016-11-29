@@ -1,0 +1,24 @@
+program p 
+
+var
+
+ nat n1,n2;
+ set s1,s2;
+
+begin 
+  s1 := (((s2))
+end
+{}
+.
+
+
+should fail at end
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,45 @@
+import java.util.*;
+import java.io.*;
+/*
+
+A template for the translator part of the project.
+
+You will need to add more static variables and also methods
+for each of the grammar variables, and modify the program method below.
+
+
+*/
+public class setTranslator{
+
+   private static setScanner sc;
+   private static PrintStream dest;
+
+   private static void program(){
+      // attempts the translation of the source file 
+      // into a Java source file.
+   }
+
+
+// you should not need to modify the main method
+public static void main(String[] args) throws Exception{
+
+   if (args.length == 0)
+      sc = new setScanner(new Scanner(System.in));
+   else
+     sc = new setScanner(new Scanner(new File(args[0])));
+
+   Token currTok = sc.lookahead();
+
+   // adding a test for null so I can compile and run this
+   if (currTok != null && currTok.getTokenType() == Token.PROGRAM)
+      program();
+   else
+      throw new Exception("\"program\" expected.");
+
+   // add a comment  indicating a successful parse
+   dest.println("\n// Parsing completed successfully.");
+   dest.close();
+   
+
+}
+}

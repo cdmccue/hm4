@@ -1,0 +1,28 @@
+program p 
+
+var
+
+ nat n1,n2;
+ set s1,s2;
+
+begin 
+n1 := n2;
+s1 := - endif
+end
+{}
+.
+
+should fail at endif
+
+a set expression should begin with
+
+ID
+(
+{
+CMP
+-
+
+
+
+
+

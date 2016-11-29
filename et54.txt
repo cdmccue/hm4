@@ -1,0 +1,19 @@
+program p 
+
+var
+
+ nat n1,n2;
+ set s1,s2;
+
+begin 
+  if not not not not s1 = not s1 * s1 \ s2 + s1  then
+
+  
+end
+{}
+.
+
+
+should fail at not after =
+
+

@@ -1,0 +1,13 @@
+program p 
+
+var
+
+ nat n1;
+ set s1,s2;
+
+begin 
+n1 := s1;
+
+should fail at s1, which is not declared as a nat
+
+

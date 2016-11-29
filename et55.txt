@@ -1,0 +1,17 @@
+program p 
+
+var
+
+ nat n1,n2;
+ set s1,s2;
+
+begin 
+  if CMP{1,2,3} in s1  then
+
+  
+end
+{}
+.
+
+
+should fail at in

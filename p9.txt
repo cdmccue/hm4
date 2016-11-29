@@ -1,0 +1,14 @@
+program p9
+
+var
+
+nat i,j,k;
+
+set s,t;
+
+begin
+   t := {};
+   s := -t
+end
+s
+.

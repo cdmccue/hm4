@@ -1,0 +1,1 @@
+program p novar should make it fail.

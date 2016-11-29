@@ -1,0 +1,3 @@
+program p var nat <= begin end , should fail at <=
+
+

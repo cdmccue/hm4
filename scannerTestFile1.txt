@@ -1,0 +1,62 @@
+program program		program(program)program{program}program;program.program,program:=program<=program=program*program+program\program-program
+end end		end(end)end{end}end;end.end,end:=end<=end=end*end+end\end-end
+then then		then(then)then{then}then;then.then,then:=then<=then=then*then+then\then-then
+CMP CMP		CMP(CMP)CMP{CMP}CMP;CMP.CMP,CMP:=CMP<=CMP=CMP*CMP+CMP\CMP-CMP
+if if		if(if)if{if}if;if.if,if:=if<=if=if*if+if\if-if
+else else		else(else)else{else}else;else.else,else:=else<=else=else*else+else\else-else
+endif endif		endif(endif)endif{endif}endif;endif.endif,endif:=endif<=endif=endif*endif+endif\endif-endif
+begin begin		begin(begin)begin{begin}begin;begin.begin,begin:=begin<=begin=begin*begin+begin\begin-begin
+var var		 var(var)var{var}var;var.var,var:=var<=var=var*var+var\var-var1
+nat nat		nat(nat)nat{nat}nat;nat.nat,nat:=nat<=nat=nat*nat+nat\nat-nat
+set set		set(set)set{set}set;set.set,set:=set<=set=set*set+set\set-set
+not not		not(not)not{not}not;not.not,not:=not<=not=not*not+not\not-not
+in in		in(in)in{in}in;in.in,in:=in<=in=in*in+in\in-in
+program1 program2		program3(program4)program5{program6}program7;program8.program9,program10:=program11<=program12=program13*program14+program15\program16-program17
+in1 in2		in3(in4)in5{in6}in7;in8.in9,in10:=in11<=in12=in13*in14+in15\in16-in17
+abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789
+Abcdefghijkl(mnopqrstuvw)xyz01234567-89ABCDEFGH+IJKLMNOPQRS{TUVWXYZ01}23456789
+abcdefghi*jklmnopqrstuvwxyz=0123456789ABC;DEFGHIJKL<=MNOPQRSTUVW:=XYZ0123456789
+Abcdefghijklm,nopqrstuvwxyz0123456789AB.CDEFGHIJKLMNOPQR\STUVWXYZ0123456789
+
+{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{
+                                 
+}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}
+				
+(((((((((((((((((((((((((((((((((((
+    
+)))))))))))))))))))))))))))))))))))
+
+++++++++++++++++++
+
+-----------------------------------
+==================
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+....................................
+*****************************
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=<=
+:=:=:=:=:=:=:=:=:=:=:=:=:=:=:=:=:=:=:=:=
+0001 2 3 4 5 6 7 8 9 123456789
+()-+{};\,.<=:=
+     
+											
+
+ ( ) - + { } ; \ , . <= := * =
+           (           )           -           +           {           }           ;           \           ,           .           <=           :=           *           =
+	(	)	-	+	{	}	;	\	,	.	<=	:=	*	=
+	 (		 )		 -		 +		 {		 }		 ;		 \		 ,		 .		 <=		 :=		 *		 =
+
+
+
+NoTokenBeginsWithA >
+?becauseNoTokenBeginswith?thisShouldBeOneUnrecognizedToken >andThisAnotherUnrecognizedToken
+<w/oAFollowing=IsAlsoUnrecognized  :lackingAFollowing=IsUnrecognized <1 << :: :9 : = < =
+    thereAreSomeBlankLinesBeforeEOF
+
+
+
+
+
+
+

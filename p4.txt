@@ -1,0 +1,13 @@
+program p4
+
+var
+
+nat i,j,k;
+
+set s;
+
+begin
+   s := CMP{0,2,4,6,8,10}
+end
+s
+.

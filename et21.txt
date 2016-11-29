@@ -1,0 +1,17 @@
+program p 
+
+var
+
+ nat n1,n2;
+ set s1,s2;
+
+begin 
+n1 := n2;
+s := {}
+end
+{}
+.
+
+should fail at s, since it's not declared
+
+

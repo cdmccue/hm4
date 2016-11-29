@@ -1,0 +1,28 @@
+program p 
+
+var
+
+ nat n1,n2;
+ set s1,s2;
+
+begin 
+  if (s1 <= s2) then
+
+  
+end
+{}
+.
+
+
+should fail at <=
+
+
+
+
+
+
+
+
+
+
+

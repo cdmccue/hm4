@@ -1,0 +1,27 @@
+program p
+
+var
+
+begin
+
+if 6 in {} then
+if 6 in {} then
+if 6 in {} then
+if 6 in {} then
+if 6 in {} then
+if 6 in {} then
+if 6 in {} then
+if 6 in {} then
+endif
+endif
+endif
+endif
+endif
+endif
+endif
+
+end
+{}
+.
+
+should fail at end 
