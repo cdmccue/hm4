@@ -30,7 +30,8 @@ public class setTranslator {
     private static String setExpResultVariable, setLevel2ResultVariable,
             setLevel1ResultVariable, setLevel0ResultVariable,
             setAtomicResultVariable, setConstResultVariable,
-            setComplementedLiteralResultVariable, setLiteralResultVariable;
+            setComplementedLiteralResultVariable, setLiteralResultVariable,
+            natExpResult;
 
     private static String setTempPrefix = "$sv";
     private static String natArrTempPrefix = "$iv";
@@ -1100,7 +1101,7 @@ public class setTranslator {
         // TODO
         Token tk = sc.lookahead();
         int tkN = tk.getTokenType();
-        String str = tk.getTokenString;
+        String str = tk.getTokenString();
 
         if (tkN == Token.ID){
            if (symbolTable.containsKey(str))
@@ -1332,7 +1333,6 @@ public class setTranslator {
 
         ***/
         // TODO
-        
     }
     
     // method for nat exp
@@ -1420,15 +1420,19 @@ public class setTranslator {
 
         ***/
         
-        Token lookAheadToken = sc.lookahead();
+        Token tk = sc.lookahead();
+        int tkN = tk.getTokenType();
+        String str = tk.getTokenString();
+        String value = (String) symbolTable.get(str)
+        
         // check that the lookahead is correct
-        if (lookAheadToken.getTokenType() != Token.CMP && lookAheadToken.getTokenType() != Token.LEFTBRACE
-                && lookAheadToken.getTokenType() != Token.LEFTPAREN 
-                && lookAheadToken.getTokenType() != Token.COMPLEMENT
-                && lookAheadToken.getTokenType() != Token.ID) {
+        if (tkN != Token.CMP && tkN != Token.LEFTBRACE
+                && tkN != Token.LEFTPAREN 
+                && tkN != Token.COMPLEMENT
+                && tkN != Token.ID) {
             // throw the exception
             try {
-                throw new Exception("[line " + lookAheadToken.getLineNum() + "]: \"CMP\", leftbrace, "
+                throw new Exception("[line " + tk.getLineNum() + "]: \"CMP\", leftbrace, "
                         + "identifier, leftparen, or complement(-) expected");
             } catch (Exception e) {
                 err = new PrintWriter(errorWrite);
@@ -1439,16 +1443,42 @@ public class setTranslator {
                 System.exit(1);
             } 
             
-        } else if (lookAheadToken.getTokenType() == Token.ID) {
-            // TODO 
+        } else if (tkN == Token.ID) {
+            if (!symbolTable.containsKey(str))
+            {
+                try {
+                    throw new Exception("[line " + tk.getLineNum() + "]: id not declared.");
+                } catch (Exception e) {
+                    err = new PrintWriter(errorWrite);
+                    err.println(e.getMessage()+"\n");
+                    err.close();
+                    dest.close();
+                    sourceFile.delete();
+                    System.exit(1);
+                }
+            }
+            //if ID is declared to be of type nat
+            if (value.equals("int"))
+            {
+               try {
+                   throw new Exception("[line " + tk.getLineNum() + "]: id not declared as a set.");
+               } catch (Exception e) {
+                err = new PrintWriter(errorWrite);
+                err.println(e.getMessage()+"\n");
+                err.close();
+                dest.close();
+                sourceFile.delete();
+                System.exit(1);
+               }
+            }
         } else {
             setExp();
             System.out.println( setExpResultVariable.toString());
         }
         
-        if (lookAheadToken.getTokenType() != Token.PERIOD)
+        if (tkN != Token.PERIOD)
             try {
-                throw new Exception("[line " + lookAheadToken.getLineNum() + "]: period expected.");
+                throw new Exception("[line " + tk.getLineNum() + "]: period expected.");
             } catch (Exception e) {
                 err = new PrintWriter(errorWrite);
                 err.println(e.getMessage()+"\n");
@@ -1461,7 +1491,6 @@ public class setTranslator {
             sc.consume();
             dest.print("\n}\n}\n");
         }
-        
     }
 
     // helper method to create a Temp variable
