@@ -31,7 +31,7 @@ public class setTranslator {
             setLevel1ResultVariable, setLevel0ResultVariable,
             setAtomicResultVariable, setConstResultVariable,
             setComplementedLiteralResultVariable, setLiteralResultVariable,
-            natExpResult;
+            natExpResultVariable;
 
     private static String setTempPrefix = "$sv";
     private static String natArrTempPrefix = "$iv";
@@ -49,6 +49,9 @@ public class setTranslator {
     
     // to track if a variable should be installed as NAT or SET 
     private static boolean inNatDecs = true;
+    
+    // to track if a set should be complement
+    private static boolean complement = false;
     
     // the symbol table for installing NAT and SET variables
     private static HashMap symbolTable;
@@ -182,9 +185,27 @@ public class setTranslator {
         // check for NAT and SET variables that need to be declared and the BEGIN 
         if (tkType == Token.NAT || tkType == Token.SET || tkType == Token.BEGIN) {
             dec();
+            tk = sc.lookahead();
+            tkType = tk.getTokenType();
         } else {
             try {
                 throw new Exception("[line " + tk.getLineNum() + "]: \"nat\", \"set\", or \"begin\" expected.");
+            } catch (Exception e) {
+                err = new PrintWriter(errorWrite);
+                err.println(e.getMessage()+"\n");
+                err.close();
+                dest.close();
+                sourceFile.delete();
+                System.exit(1);
+            }
+        }
+        if (tkType == Token.ID || tkType == Token.END) {
+            if(tkType == Token.ID)
+                stList();
+            out();
+        } else {
+            try {
+                throw new Exception("[line " + tk.getLineNum() + "]: identifier, or \"end\" expected.");
             } catch (Exception e) {
                 err = new PrintWriter(errorWrite);
                 err.println(e.getMessage()+"\n");
@@ -253,7 +274,7 @@ public class setTranslator {
             }
         } else {
             sc.consume();
-            dest.println("public static void main(String[] args){\n");
+            dest.println("\tpublic static void main(String[] args){\n");
         }
     }
     // method for natDec
@@ -447,7 +468,7 @@ public class setTranslator {
                 if(inNatDecs) {
                     if (!symbolTable.containsKey(tk.getTokenString())) {
                         symbolTable.put(tk.getTokenString(),"int");
-                        dest.println("private static int " + tk.getTokenString() + ";\n");
+                        dest.println("\tprivate static int " + tk.getTokenString() + ";\n");
                     } else {
                         try {
                             String value = (String) symbolTable.get(tk.getTokenString());
@@ -471,7 +492,7 @@ public class setTranslator {
                 else {
                     if (!symbolTable.containsKey(tk.getTokenString())) {
                         symbolTable.put(tk.getTokenString(),"CofinFin");
-                        dest.println("private static CofinFin " + tk.getTokenString() + " = new CofinFin();\n");
+                        dest.println("\tprivate static CofinFin " + tk.getTokenString() + " = new CofinFin();\n");
                     } else {
                         try {
                             String value = (String) symbolTable.get(tk.getTokenString());
@@ -543,7 +564,7 @@ public class setTranslator {
                     else {
                         if (!symbolTable.containsKey(tk.getTokenString())) {
                             symbolTable.put(tk.getTokenString(),"CofinFin");
-                            dest.println("private static CofinFin " + tk.getTokenString() + " = new CofinFin();\n");
+                            dest.println("\tprivate static CofinFin " + tk.getTokenString() + " = new CofinFin();\n");
                         } else {
                             try {
                                 String value = (String) symbolTable.get(tk.getTokenString());
@@ -651,8 +672,11 @@ public class setTranslator {
             sc.consume();
             tk = sc.lookahead();
             tkN = tk.getTokenType();
-            if (tkN == Token.ID || tkN == Token.IF)
+            if (tkN == Token.ID || tkN == Token.IF) {
                 st();
+                tk = sc.lookahead();
+                tkN = tk.getTokenType();
+            }
             else {
                 try {
                     throw new Exception("[line " + tk.getLineNum() + "]: identifier or if expected.");
@@ -664,7 +688,7 @@ public class setTranslator {
                     sourceFile.delete();
                     System.exit(1);
                 }
-            }       
+            }
         }   
     }
     
@@ -707,7 +731,7 @@ public class setTranslator {
                else  // the only other alternative is declared as a set
                   setAsgn();
             }***/
-        // TO DO
+        // DONE
         
         Token id = sc.lookahead();
         if (!symbolTable.containsKey(id.getTokenString())) {
@@ -754,7 +778,45 @@ public class setTranslator {
            }
         }***/
         // TODO
+        Token id = sc.lookahead();
+        sc.consume();
+        Token tk = sc.lookahead();
+        int tkN = tk.getTokenType();
         
+        // check if  the lookahead is an assigment operator
+        if(tkN != Token.ASSIGN) {
+            try {
+                throw new Exception("[line " + tk.getLineNum() + "]: assignment operator(:=) expected.");
+            } catch (Exception e) {
+                err = new PrintWriter(errorWrite);
+                err.println(e.getMessage()+"\n");
+                err.close();
+                dest.close();
+                sourceFile.delete();
+                System.exit(1);
+            }
+        } else {
+            sc.consume();
+            tk = sc.lookahead();
+            tkN = tk.getTokenType();
+            if (tkN != Token.CMP && tkN != Token.LEFTBRACE && tkN != Token.ID
+                    && tkN != Token.LEFTPAREN && tkN != Token.COMPLEMENT) {
+                try {
+                    throw new Exception("[line " + tk.getLineNum() + "]: \"CMP\", leftbrace, identifier, leftparen, or complement(-) expected.");
+                } catch (Exception e) {
+                    err = new PrintWriter(errorWrite);
+                    err.println(e.getMessage()+"\n");
+                    err.close();
+                    dest.close();
+                    sourceFile.delete();
+                    System.exit(1);
+                }
+            } else {
+                setExp();
+                dest.println("\t\t"+id.getTokenString() + " = " +setExpResultVariable + ";\n");
+                usedSetTemps--;
+            }
+        }
     }
     
     // method to generate set expressions
@@ -779,7 +841,7 @@ public class setTranslator {
                 res = setTempPrefix + (++usedSetTemps);
     
             // if it's new, we have to declare it;
-            dest.println((needANewTemp ? "CofinFin " : "") + res + " = "
+            dest.println((needANewTemp ? "\t\tCofinFin " : "\t\t") + res + " = "
                     + setLevel2ResultVariable + ';');
         }
         while (tkN == Token.SETDIFFERENCE) {
@@ -800,8 +862,8 @@ public class setTranslator {
                 }
             else {
                 setLevel2();
-                dest.println(res + " = " + res + ".intersect("
-                        + setLevel2ResultVariable + ".complement())");
+                dest.println("\t\t"+res + " = " + res + ".intersect("
+                        + setLevel2ResultVariable + ".complement());");
                 tk = sc.lookahead();
                 tkN = tk.getTokenType();
             }
@@ -846,7 +908,7 @@ public class setTranslator {
                 res = setTempPrefix + (++usedSetTemps);
     
             // if it's new, we have to declare it;
-            dest.println((needANewTemp ? "CofinFin " : "") + res + " = "
+            dest.println((needANewTemp ? "\t\tCofinFin " : "\t\t") + res + " = "
                     + setLevel1ResultVariable + ';');
         }
         while (tkN == Token.UNION) {
@@ -867,8 +929,8 @@ public class setTranslator {
                 }
             else {
                 setLevel1();
-                dest.println(res + " = " + res + ".union("
-                        + setLevel1ResultVariable);
+                dest.println("\t\t"+res + " = " + res + ".union("
+                        + setLevel1ResultVariable+");");
                 tk = sc.lookahead();
                 tkN = tk.getTokenType();
             }
@@ -912,7 +974,7 @@ public class setTranslator {
                 res = setTempPrefix + (++usedSetTemps);
     
             // if it's new, we have to declare it;
-            dest.println((needANewTemp ? "CofinFin " : "") + res + " = "
+            dest.println((needANewTemp ? "\t\tCofinFin " : "\t\t") + res + " = "
                     + setLevel0ResultVariable + ';');
         }
         while (tkN == Token.INTERSECTION) {
@@ -933,8 +995,8 @@ public class setTranslator {
                 }
             else {
                 setLevel0();
-                dest.println(res + " = " + res + ".intersect("
-                        + setLevel0ResultVariable);
+                dest.println("\t\t"+res + " = " + res + ".intersect("
+                        + setLevel0ResultVariable+");");
                 tk = sc.lookahead();
                 tkN = tk.getTokenType();
             }
@@ -1009,9 +1071,10 @@ public class setTranslator {
 
         //if compCount is even level0 result variable is set atomic result variable
         //else we continue the same pattern now that we have counted the comps
-        if ((compCount % 2) == 0 || setAtomicResultVariable.charAt(0) == '$'
-                || tkN != Token.COMPLEMENT)
+        if ((compCount % 2) == 0 && tkN != Token.COMPLEMENT){
+            setAtomic();
             res = setAtomicResultVariable;
+        }
         else {
             // the result is a program variable and we will need to perform an
             // op
@@ -1024,35 +1087,29 @@ public class setTranslator {
                 res = setTempPrefix + (++usedSetTemps);
     
             // if it's new, we have to declare it;
-            dest.println((needANewTemp ? "CofinFin " : "") + res + " = "
+            dest.println((needANewTemp ? "\t\tCofinFin " : "\t\t") + res + " = "
                     + setAtomicResultVariable + ';');
-        }
 
-        //now we can perform the operation
-        if (tkN == Token.CMP || tkN == Token.LEFTBRACE || tkN == Token.ID
-                || tkN == Token.LEFTPAREN || tkN == Token.COMPLEMENT) {
-            setAtomic();
-            dest.println(res + " = " + res + ".complement()");
-            tk = sc.lookahead();
-            tkN = tk.getTokenType();
-        }
-        else {
-            try {
-                throw new Exception("[line " +tk.getLineNum() +"]: \"CMP\", leftbrace, identifier, leftparen, or complement(-) expected.");
-            } catch (Exception e) {
-                err = new PrintWriter(errorWrite);
-                err.println(e.getMessage()+"\n");
-                err.close();
-                dest.close();
-                sourceFile.delete();
-                System.exit(1);
+            //now we can perform the operation
+            if (tkN == Token.CMP || tkN == Token.LEFTBRACE || tkN == Token.ID
+                    || tkN == Token.LEFTPAREN || tkN == Token.COMPLEMENT) {
+                setAtomic();
+                dest.println("\t\t"+res + " = " + setAtomicResultVariable + ".complement();");
             }
-    
+            else {
+                try {
+                    throw new Exception("[line " +tk.getLineNum() +"]: \"CMP\", leftbrace, identifier, leftparen, or complement(-) expected.");
+                } catch (Exception e) {
+                    err = new PrintWriter(errorWrite);
+                    err.println(e.getMessage()+"\n");
+                    err.close();
+                    dest.close();
+                    sourceFile.delete();
+                    System.exit(1);
+                }
+            }
         }
-
-        setLevel0ResultVariable = res;
-
-        
+        setLevel0ResultVariable = res;                        
     }
     // method for setAtomic
     public static void setAtomic() {
@@ -1106,10 +1163,12 @@ public class setTranslator {
         if (tkN == Token.ID){
            if (symbolTable.containsKey(str))
            {
-               String value = (String) symbolTable.get(str)
-               if (value.equals("CofinFin"))//ID is declared to be of type set
+               String value = (String) symbolTable.get(str);
+               if (value.equals("CofinFin")){//ID is declared to be of type set 
                   setAtomicResultVariable = str;
-               else (value.equals("int"))//ID declared to be of type nat
+                  sc.consume();
+               }
+               else //ID declared to be of type nat
                   try {
                         throw new Exception("[line " +tk.getLineNum() +"]:" + str + "is declared as nat, not set");
                     } catch (Exception e) {
@@ -1133,9 +1192,10 @@ public class setTranslator {
                     System.exit(1);
                 }
         }
-        else if (tkN == Token.LEFTPAREN){
-           sc.consume();
-           if (tkN != Token.CMP && tkN != Token.LEFTBRACE && tkN != Token.ID
+        else if (tkN == Token.LEFTPAREN)
+        {
+            sc.consume();
+            if (tkN != Token.CMP && tkN != Token.LEFTBRACE && tkN != Token.ID
                     && tkN != Token.LEFTPAREN && tkN != Token.COMPLEMENT)
                 try {
                     throw new Exception("[line " +tk.getLineNum() +"]: \"CMP\", leftbrace, identifier, leftparen, or complement(-) expected.");
@@ -1147,28 +1207,32 @@ public class setTranslator {
                     sourceFile.delete();
                     System.exit(1);
                 }
-           else{
-              setExp();
-              if (tkN == Token.RIGHTPAREN){
-                 sc.consume();
-                 setAtomicResultVariable = setExpResultVariable;
-              }   
-              else
-                try {
-                    throw new Exception("[line " +tk.getLineNum() +"]: rightparen expected");
-                } catch (Exception e) {
-                    err = new PrintWriter(errorWrite);
-                    err.println(e.getMessage()+"\n");
-                    err.close();
-                    dest.close();
-                    sourceFile.delete();
-                    System.exit(1);
-           }
+            else{
+                setExp();
+                tk = sc.lookahead();
+                tkN = tk.getTokenType();
+                if (tkN == Token.RIGHTPAREN){
+                    sc.consume();
+                    setAtomicResultVariable = setExpResultVariable;
+                }   
+                else
+                    try {
+                        throw new Exception("[line " +tk.getLineNum() +"]: rightparen expected");
+                    } catch (Exception e) {
+                        err = new PrintWriter(errorWrite);
+                        err.println(e.getMessage()+"\n");
+                        err.close();
+                        dest.close();
+                        sourceFile.delete();
+                        System.exit(1);
+                    }
+            }
         }
         else{ // lookahead is either LEFTBRACE or CMP
            setConst();
            setAtomicResultVariable = setConstResultVariable;
         }
+        
     }
     
     // method for setConst
@@ -1241,9 +1305,9 @@ public class setTranslator {
         ***/
         
         // DONE
+        complement = true;
         sc.consume();
         setLiteral();
-        dest.println(setLiteralResultVariable +" = " + setLiteralResultVariable + ".complement()");
         setComplementedLiteralResultVariable = setLiteralResultVariable;
         
     }
@@ -1311,6 +1375,99 @@ public class setTranslator {
 
         ***/
         // TODO
+        String res = "";
+        String tempNatVar = "";
+        String tempSetVar = "";
+        boolean needANewTemp = nextNatArrTempSuffix == natArrTempSuffix;
+        
+        // get new temp variable for the int arrays
+        if (needANewTemp) {
+            tempNatVar = nextTemp(false);
+            nextNatArrTempSuffix++;
+        } else
+            tempNatVar = natArrTempPrefix + (++nextNatArrTempSuffix);
+        
+        dest.print((needANewTemp ? "\t\tint[] ": "\t\t") +tempNatVar + " = "+ (!needANewTemp ? "new int[]": "")+"{");
+        
+        sc.consume();
+        Token tk = sc.lookahead();
+        int tkN = tk.getTokenType();
+        while (tkN != Token.RIGHTBRACE){
+            if (tkN == Token.NATCONST){
+                dest.print(tk.getTokenString());
+                sc.consume();
+                tk = sc.lookahead();
+                tkN = tk.getTokenType();
+                if (tkN == Token.COMMA){
+                    sc.consume();
+                    tk = sc.lookahead();
+                    tkN = tk.getTokenType();
+                    dest.print(", ");
+                    if (tkN != Token.NATCONST)
+                     //throw an exception with message
+                     //"natconstant expected."
+                        try {
+                            throw new Exception("[line " +tk.getLineNum() +"]: natconstant expected");
+                        } catch (Exception e) {
+                            err = new PrintWriter(errorWrite);
+                            err.println(e.getMessage()+"\n");
+                            err.close();
+                            dest.close();
+                            sourceFile.delete();
+                            System.exit(1);
+                        }
+                }
+                else if (tkN != Token.RIGHTBRACE)
+                    // throw an exception with message
+                    //"comma or rightbrace expected."
+                    try {
+                        throw new Exception("[line " +tk.getLineNum() +"]: rightparen expected");
+                    } catch (Exception e) {
+                        err = new PrintWriter(errorWrite);
+                        err.println(e.getMessage()+"\n");
+                        err.close();
+                        dest.close();
+                        sourceFile.delete();
+                        System.exit(1);
+                    }
+            }
+            else
+                // throw an exception with message
+                //"natconstant or rightbrace expected."
+                try {
+                    throw new Exception("[line " +tk.getLineNum() +"]: natconstant or rightbrace expected");
+                } catch (Exception e) {
+                    err = new PrintWriter(errorWrite);
+                    err.println(e.getMessage()+"\n");
+                    err.close();
+                    dest.close();
+                    sourceFile.delete();
+                    System.exit(1);
+                }
+        }
+        sc.consume();
+        dest.println("};\n");
+        
+        // add the CofinFin line of code to the res string
+        needANewTemp = usedSetTemps == decSetTemps;
+        
+        if (needANewTemp) {
+            tempSetVar = nextTemp(true);
+            usedSetTemps++;
+        } else {
+            tempSetVar = setTempPrefix + (++usedSetTemps);
+        }
+        
+        // check if the result should be a complement
+        if (!complement)
+            dest.println((needANewTemp ? "\t\tCofinFin " : "\t\t") + tempSetVar + " = new CofinFin(false, " + tempNatVar +");\n");
+        else {
+            complement = false;
+            dest.println((needANewTemp ? "\t\tCofinFin " : "\t\t") + tempSetVar + " = new CofinFin(true, " + tempNatVar +");\n");
+        }
+        nextNatArrTempSuffix--;
+        setLiteralResultVariable = tempSetVar;
+        
         
     }
     // method for nat asgn
@@ -1333,6 +1490,44 @@ public class setTranslator {
 
         ***/
         // TODO
+        Token id = sc.lookahead();
+        sc.consume();
+        Token tk = sc.lookahead();
+        int tkN = tk.getTokenType();
+        
+        // check if  the lookahead is an assigment operator
+        if(tkN != Token.ASSIGN) {
+            try {
+                throw new Exception("[line " + tk.getLineNum() + "]: assignment operator(:=) expected.");
+            } catch (Exception e) {
+                err = new PrintWriter(errorWrite);
+                err.println(e.getMessage()+"\n");
+                err.close();
+                dest.close();
+                sourceFile.delete();
+                System.exit(1);
+            }
+        } else {
+            // TODO
+            sc.consume();
+            tk = sc.lookahead();
+            tkN = tk.getTokenType();
+            if (tkN != Token.ID && tkN != Token.NATCONST) {
+                try {
+                    throw new Exception("[line " + tk.getLineNum() + "]: identifier or natconst expected.");
+                } catch (Exception e) {
+                    err = new PrintWriter(errorWrite);
+                    err.println(e.getMessage()+"\n");
+                    err.close();
+                    dest.close();
+                    sourceFile.delete();
+                    System.exit(1);
+                }
+            } else {
+                natExp();
+                dest.println(id.getTokenString() + " = " +natExpResultVariable + ";\n");
+            }
+        }
     }
     
     // method for nat exp
@@ -1351,7 +1546,31 @@ public class setTranslator {
 
         ***/
         // TODO 
+        String res = "";
+        Token tk = sc.lookahead();
+        int tkN = tk.getTokenType();
         
+        if (tkN == Token.ID && symbolTable.containsKey(tk.getTokenString())) {
+            res = (String) symbolTable.get(tk.getTokenString());
+            if (res.equals("int"))
+                natExpResultVariable = res;
+            else {
+                try {
+                    throw new Exception("[line " + tk.getLineNum() + "]: identifier declared as set.");
+                } catch (Exception e) {
+                    err = new PrintWriter(errorWrite);
+                    err.println(e.getMessage()+"\n");
+                    err.close();
+                    dest.close();
+                    sourceFile.delete();
+                    System.exit(1);
+                }
+            }
+        } else {
+            res = tk.getTokenString();
+            natExpResultVariable = res;
+        }
+            
     }
     /*** METHODS FOR IF GRAMMAR RULES ***/
     // method for test
@@ -1419,12 +1638,9 @@ public class setTranslator {
         to see if the period is the last token before EOF.
 
         ***/
-        
+        sc.consume();
         Token tk = sc.lookahead();
         int tkN = tk.getTokenType();
-        String str = tk.getTokenString();
-        String value = (String) symbolTable.get(str)
-        
         // check that the lookahead is correct
         if (tkN != Token.CMP && tkN != Token.LEFTBRACE
                 && tkN != Token.LEFTPAREN 
@@ -1442,40 +1658,44 @@ public class setTranslator {
                 sourceFile.delete();
                 System.exit(1);
             } 
-            
-        } else if (tkN == Token.ID) {
-            if (!symbolTable.containsKey(str))
-            {
-                try {
-                    throw new Exception("[line " + tk.getLineNum() + "]: id not declared.");
-                } catch (Exception e) {
-                    err = new PrintWriter(errorWrite);
-                    err.println(e.getMessage()+"\n");
-                    err.close();
-                    dest.close();
-                    sourceFile.delete();
-                    System.exit(1);
+        } else {
+            String res = "";
+            if (tkN == Token.ID) {
+                if (symbolTable.containsKey(tk.getTokenString())) {
+                    String check = (String) symbolTable.get(tk.getTokenString());
+                    if (check.equals("int")) {
+                        try {
+                            throw new Exception("[line " + tk.getLineNum() + "]: " 
+                                    + tk.getTokenString() +" not declared as set");
+                        } catch (Exception e) {
+                            err = new PrintWriter(errorWrite);
+                            err.println(e.getMessage()+"\n");
+                            err.close();
+                            dest.close();
+                            sourceFile.delete();
+                            System.exit(1);
+                        }
+                    }
+                } else {
+                    try {
+                        throw new Exception("[line " + tk.getLineNum() + "]: "
+                                + tk.getTokenString() + " not declared");
+                    } catch (Exception e) {
+                        err = new PrintWriter(errorWrite);
+                        err.println(e.getMessage()+"\n");
+                        err.close();
+                        dest.close();
+                        sourceFile.delete();
+                        System.exit(1);
+                    }
                 }
             }
-            //if ID is declared to be of type nat
-            if (value.equals("int"))
-            {
-               try {
-                   throw new Exception("[line " + tk.getLineNum() + "]: id not declared as a set.");
-               } catch (Exception e) {
-                err = new PrintWriter(errorWrite);
-                err.println(e.getMessage()+"\n");
-                err.close();
-                dest.close();
-                sourceFile.delete();
-                System.exit(1);
-               }
-            }
-        } else {
+            
             setExp();
-            System.out.println( setExpResultVariable.toString());
+            dest.println("\t\tSystem.out.println("+setExpResultVariable+".toString());");
         }
-        
+        tk = sc.lookahead();
+        tkN = tk.getTokenType();
         if (tkN != Token.PERIOD)
             try {
                 throw new Exception("[line " + tk.getLineNum() + "]: period expected.");
@@ -1489,8 +1709,9 @@ public class setTranslator {
             }
         else {
             sc.consume();
-            dest.print("\n}\n}\n");
+            dest.print("\n\t}\n}\n");
         }
+        
     }
 
     // helper method to create a Temp variable
@@ -1514,7 +1735,8 @@ public class setTranslator {
         Token currTok = sc.lookahead();
 
         // file writer for the error file
-        errorWrite = new FileWriter("myErrorTestResults.txt", true);
+        File errorFile = new File("myErrorTestResults.txt");
+        errorWrite = new FileWriter(errorFile, true);
         
         // adding a test for null so I can compile and run this
         try {
@@ -1527,6 +1749,10 @@ public class setTranslator {
             if (dest != null) {
                 dest.println("\n// Parsing completed successfully.");
                 dest.close();
+                
+                // no errors so close the writer and delete the error file
+                errorWrite.close();
+                errorFile.delete();
             }
         } catch (Exception e) {
             err = new PrintWriter(errorWrite);
