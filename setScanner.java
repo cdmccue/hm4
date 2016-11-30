@@ -250,7 +250,7 @@ public class setScanner {
                 break;
             }
         }
-        if (!src.hasNextLine() || charArray == null) {
+        if (!src.hasNextLine() && (charArray.length == 0 || currPos >= charArray.length)) {
             tokenType = 29;
             currToken = new Token(tokenType, ++currLineNumber);
         } else {
